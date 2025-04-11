@@ -7,7 +7,7 @@
 
 > A modern, responsive e-commerce homepage with dark/light mode, advanced animations, and intuitive navigation for Shopify merchants
 
-![HomeNav-PRO Preview](/api/placeholder/1200/630)
+![HomeNav-PRO Preview](./src/assets/images/home.png)
 
 ## ✨ Features
 
@@ -21,7 +21,7 @@
 
 ## 🚀 Live Demo
 
-[View Live Demo](https://homenav-pro.vercel.app) (Replace with your deployed URL)
+[View Live Demo](https://homenav-pro.netlify.app) (Replace with your deployed URL)
 
 ## 🛠️ Technologies
 
