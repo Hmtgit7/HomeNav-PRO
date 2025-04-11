@@ -1,7 +1,9 @@
-import { defineConfig } from 'vite'
-import reactRefresh from '@vitejs/plugin-react-refresh'
+// vite.config.js
+import { defineConfig } from 'vite';
 
-// https://vitejs.dev/config/
+// If you're not using any plugins:
 export default defineConfig({
-  plugins: [reactRefresh()]
-})
+  build: {
+    outDir: 'dist',
+  },
+});
