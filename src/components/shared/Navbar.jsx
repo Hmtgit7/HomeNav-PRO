@@ -41,7 +41,29 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [cartItems, setCartItems] = useState(0); // Mock cart data
+  const [cartItems, setCartItems] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  // Load cart and wishlist counts from localStorage
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    setCartItems(savedCart.length);
+    setWishlistCount(savedWishlist.length);
+  }, []);
+
+  // Listen for storage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setCartItems(savedCart.length);
+      setWishlistCount(savedWishlist.length);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Close dropdown when clicking outside
   const dropdownRef = useClickOutside(() => {
@@ -170,6 +192,19 @@ const Navbar = () => {
               </Link>
             )}
 
+            <Link to="/wishlist">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <FiHeart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {wishlistCount}
+                  </span>
+                )}
+              </motion.button>
+            </Link>
             <Link to="/cart">
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -405,6 +440,19 @@ const Navbar = () => {
               </div>
             )}
 
+            <Link to="/wishlist">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <FiHeart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {wishlistCount}
+                  </span>
+                )}
+              </motion.button>
+            </Link>
             <Link to="/cart">
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -523,6 +571,15 @@ const Navbar = () => {
                     >
                       <FiPackage className="mr-3 h-5 w-5" />
                       My Orders
+                    </Link>
+                    <Link
+                      to="/wishlist"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center py-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}
+                    >
+                      <FiHeart className="mr-3 h-5 w-5" />
+                      Wishlist
                     </Link>
                     <button
                       onClick={() => {

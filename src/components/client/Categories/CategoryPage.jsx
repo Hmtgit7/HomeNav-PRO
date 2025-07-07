@@ -219,6 +219,8 @@ const CategoryPage = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 300]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12);
   
   // Get categoryId from URL params
   const categoryId = window.location.pathname.split('/').pop();
@@ -262,7 +264,33 @@ const CategoryPage = () => {
     }
 
     setFilteredProducts(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [category, searchQuery, priceRange, sortBy]);
+
+  // Pagination functions
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   if (!category) {
     return (
@@ -392,9 +420,12 @@ const CategoryPage = () => {
           <div className="lg:w-3/4">
             {/* Toolbar */}
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-              <div className="flex items-center space-x-4 mb-4 sm:mb-0">
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <span className="text-sm text-gray-600 dark:text-gray-300">
-                  {filteredProducts.length} products in {category.name}
+                  Showing {indexOfFirstProduct + 1}-{Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products in {category.name}
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Page {currentPage} of {totalPages}
                 </span>
               </div>
 
@@ -431,7 +462,7 @@ const CategoryPage = () => {
                   : 'space-y-4'
                 }
               >
-                {filteredProducts.map((product) => (
+                {currentProducts.map((product) => (
                   <ProductCard key={product.id} product={product} viewMode={viewMode} />
                 ))}
               </motion.div>
@@ -448,6 +479,72 @@ const CategoryPage = () => {
                 <p className="text-gray-600 dark:text-gray-300">
                   Try adjusting your filters or search terms
                 </p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center mt-8">
+                <nav className="flex items-center space-x-1">
+                  {/* Previous Button */}
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${
+                      currentPage === 1
+                        ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-border'
+                    }`}
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, index) => {
+                      const pageNumber = index + 1;
+                      const isCurrentPage = pageNumber === currentPage;
+                      const isNearCurrent = Math.abs(pageNumber - currentPage) <= 2;
+                      const isFirstOrLast = pageNumber === 1 || pageNumber === totalPages;
+                      
+                      if (isCurrentPage || isNearCurrent || isFirstOrLast) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`px-3 py-2 text-sm font-medium rounded-md ${
+                              isCurrentPage
+                                ? 'bg-primary text-white'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-border'
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (pageNumber === currentPage - 3 || pageNumber === currentPage + 3) {
+                        return (
+                          <span key={pageNumber} className="px-2 py-2 text-gray-500 dark:text-gray-400">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${
+                      currentPage === totalPages
+                        ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-border'
+                    }`}
+                  >
+                    Next
+                  </button>
+                </nav>
               </div>
             )}
           </div>

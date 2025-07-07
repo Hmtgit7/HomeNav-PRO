@@ -1,48 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiTrash2, FiPlus, FiMinus, FiArrowLeft, FiCreditCard, FiTruck, FiShield } from 'react-icons/fi';
+import { FiTrash2, FiPlus, FiMinus, FiArrowLeft, FiCreditCard, FiTruck, FiShield, FiHeart } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../../context/ThemeContext';
 
-// Mock cart data
-const mockCartItems = [
-  {
-    id: 1,
-    name: "Premium Wireless Bluetooth Headphones",
-    price: 89.99,
-    originalPrice: 129.99,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
-    quantity: 1,
-    color: "Black",
-    size: "One Size"
-  },
-  {
-    id: 2,
-    name: "Modern Coffee Table",
-    price: 199.99,
-    originalPrice: 249.99,
-    image: "https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=400&h=400&fit=crop",
-    quantity: 1,
-    color: "Walnut",
-    size: "Standard"
-  },
-  {
-    id: 3,
-    name: "Leather Crossbody Bag",
-    price: 79.99,
-    originalPrice: 99.99,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop",
-    quantity: 2,
-    color: "Brown",
-    size: "One Size"
-  }
-];
-
 const CartPage = () => {
   const { theme } = useTheme();
-  const [cartItems, setCartItems] = useState(mockCartItems);
+  const [cartItems, setCartItems] = useState([]);
   const [couponCode, setCouponCode] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load cart from localStorage
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    setCartItems(savedCart);
+    setLoading(false);
+  }, []);
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const updateQuantity = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -50,7 +29,7 @@ const CartPage = () => {
     setCartItems(prev => 
       prev.map(item => 
         item.id === itemId 
-          ? { ...item, quantity: newQuantity }
+          ? { ...item, qty: newQuantity }
           : item
       )
     );
@@ -61,12 +40,12 @@ const CartPage = () => {
   };
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + (item.price * item.qty), 0);
   };
 
   const calculateDiscount = () => {
     return cartItems.reduce((total, item) => {
-      const savings = (item.originalPrice - item.price) * item.quantity;
+      const savings = item.discountPercentage ? (item.price * item.discountPercentage / 100) * item.qty : 0;
       return total + savings;
     }, 0);
   };
@@ -93,6 +72,17 @@ const CartPage = () => {
     // Checkout logic here
     console.log('Proceeding to checkout...');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className={`mt-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -193,19 +183,19 @@ const CartPage = () => {
                     >
                       <div className="flex items-start space-x-4">
                         <img
-                          src={item.image}
-                          alt={item.name}
+                          src={item.images ? item.images[0] : item.image}
+                          alt={item.title || item.name}
                           className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                         />
                         
                         <div className="flex-grow min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                            {item.name}
+                            {item.title || item.name}
                           </h3>
                           
                           <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300 mb-3">
-                            <span>Color: {item.color}</span>
-                            <span>Size: {item.size}</span>
+                            <span>Category: {item.category}</span>
+                            {item.brand && <span>Brand: {item.brand}</span>}
                           </div>
                           
                           <div className="flex items-center justify-between">
@@ -213,9 +203,9 @@ const CartPage = () => {
                               <span className="text-lg font-bold text-gray-900 dark:text-white">
                                 ${item.price}
                               </span>
-                              {item.originalPrice > item.price && (
+                              {item.discountPercentage > 0 && (
                                 <span className="text-sm text-gray-500 line-through">
-                                  ${item.originalPrice}
+                                  ${(item.price / (1 - item.discountPercentage / 100)).toFixed(2)}
                                 </span>
                               )}
                             </div>
@@ -224,16 +214,16 @@ const CartPage = () => {
                               {/* Quantity Controls */}
                               <div className="flex items-center border border-gray-300 dark:border-dark-border rounded-md">
                                 <button
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.id, item.qty - 1)}
                                   className="p-2 hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200"
                                 >
                                   <FiMinus className="h-4 w-4" />
                                 </button>
                                 <span className="px-4 py-2 text-gray-900 dark:text-white font-medium">
-                                  {item.quantity}
+                                  {item.qty}
                                 </span>
                                 <button
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.id, item.qty + 1)}
                                   className="p-2 hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200"
                                 >
                                   <FiPlus className="h-4 w-4" />

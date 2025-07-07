@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FiHeart, FiShoppingCart, FiEye, FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useTheme } from '../../../context/ThemeContext';
+import { useNotification } from '../../../context/NotificationContext';
 
 /**
  * ProductShowcase component for homepage
@@ -10,171 +11,96 @@ import { useTheme } from '../../../context/ThemeContext';
  */
 const ProductShowcase = () => {
     const { theme } = useTheme();
+    const { showCartNotification, showWishlistNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('featured');
     const [currentPage, setCurrentPage] = useState(0);
     const productsPerPage = 4;
+    const [products, setProducts] = useState({ featured: [], new: [] });
+    const [loading, setLoading] = useState(true);
+    const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart') || '[]'));
+    const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
 
-    // Mock product data
-    const products = {
-        featured: [
-            {
-                id: 1,
-                name: 'Premium Cotton T-Shirt',
-                category: 'Clothing',
-                price: 29.99,
-                salePrice: null,
-                rating: 4.8,
-                image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 2,
-                name: 'Wireless Bluetooth Headphones',
-                category: 'Electronics',
-                price: 149.99,
-                salePrice: 129.99,
-                rating: 4.6,
-                image: 'https://images.unsplash.com/photo-1605464315542-bda3e2f4e605?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 3,
-                name: 'Minimalist Watch',
-                category: 'Accessories',
-                price: 89.99,
-                salePrice: null,
-                rating: 4.9,
-                image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 4,
-                name: 'Scented Candle Set',
-                category: 'Home Decor',
-                price: 34.99,
-                salePrice: 28.99,
-                rating: 4.7,
-                image: 'https://images.unsplash.com/photo-1584592740039-cddf0671f3d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 5,
-                name: 'Leather Wallet',
-                category: 'Accessories',
-                price: 59.99,
-                salePrice: null,
-                rating: 4.5,
-                image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 6,
-                name: 'Ceramic Plant Pot',
-                category: 'Home Decor',
-                price: 24.99,
-                salePrice: 19.99,
-                rating: 4.3,
-                image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 7,
-                name: 'Smart Water Bottle',
-                category: 'Accessories',
-                price: 45.99,
-                salePrice: null,
-                rating: 4.4,
-                image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 8,
-                name: 'Wireless Charging Pad',
-                category: 'Electronics',
-                price: 39.99,
-                salePrice: 34.99,
-                rating: 4.6,
-                image: 'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f37?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    // Persist cart and wishlist to localStorage
+    useEffect(() => {
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }, [cart]);
+
+    useEffect(() => {
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    }, [wishlist]);
+
+    // Fetch products from DummyJSON
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                // Fetch featured products (first 8 products)
+                const featuredResponse = await fetch('https://dummyjson.com/products?limit=8');
+                const featuredData = await featuredResponse.json();
+                
+                // Fetch new products (next 8 products)
+                const newResponse = await fetch('https://dummyjson.com/products?limit=8&skip=8');
+                const newData = await newResponse.json();
+                
+                setProducts({
+                    featured: featuredData.products,
+                    new: newData.products
+                });
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                setLoading(false);
             }
-        ],
-        new: [
-            {
-                id: 9,
-                name: 'Sustainable Tote Bag',
-                category: 'Accessories',
-                price: 19.99,
-                salePrice: null,
-                rating: 4.5,
-                image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 10,
-                name: 'Smart Home Speaker',
-                category: 'Electronics',
-                price: 199.99,
-                salePrice: 179.99,
-                rating: 4.7,
-                image: 'https://images.unsplash.com/photo-1558089687-db9280019010?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 11,
-                name: 'Premium Coffee Maker',
-                category: 'Home',
-                price: 129.99,
-                salePrice: null,
-                rating: 4.8,
-                image: 'https://images.unsplash.com/photo-1570286424717-e9914627b2d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 12,
-                name: 'Fitness Tracker',
-                category: 'Electronics',
-                price: 99.99,
-                salePrice: 89.99,
-                rating: 4.6,
-                image: 'https://images.unsplash.com/photo-1576243345690-4e4b79b63288?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 13,
-                name: 'Bamboo Cutting Board',
-                category: 'Kitchen',
-                price: 29.99,
-                salePrice: null,
-                rating: 4.4,
-                image: 'https://images.unsplash.com/photo-1568415290062-8e0457d32314?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 14,
-                name: 'Stainless Steel Water Bottle',
-                category: 'Accessories',
-                price: 24.99,
-                salePrice: 21.99,
-                rating: 4.5,
-                image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 15,
-                name: 'Modern Desk Lamp',
-                category: 'Home Decor',
-                price: 49.99,
-                salePrice: 39.99,
-                rating: 4.3,
-                image: 'https://images.unsplash.com/photo-1534105615256-c2c957d79389?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            },
-            {
-                id: 16,
-                name: 'Yoga Mat',
-                category: 'Fitness',
-                price: 35.99,
-                salePrice: null,
-                rating: 4.7,
-                image: 'https://images.unsplash.com/photo-1592432678016-e910b452f9a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            }
-        ]
+        };
+
+        fetchProducts();
+    }, []);
+
+    const addToCart = (product) => {
+        const existingItem = cart.find(item => item.id === product.id);
+        
+        if (existingItem) {
+            setCart(prev => prev.map(item => 
+                item.id === product.id 
+                    ? { ...item, qty: item.qty + 1 }
+                    : item
+            ));
+        } else {
+            setCart(prev => [...prev, { ...product, qty: 1 }]);
+        }
+        showCartNotification(product.title);
+    };
+
+    const toggleWishlist = (productId) => {
+        const isCurrentlyWishlisted = wishlist.includes(productId);
+        const product = products[activeTab]?.find(p => p.id === productId);
+        
+        setWishlist(prev => prev.includes(productId) ? prev.filter(w => w !== productId) : [...prev, productId]);
+        
+        if (product) {
+            showWishlistNotification(product.title, !isCurrentlyWishlisted);
+        }
+    };
+
+    const isInCart = (productId) => {
+        return cart.some(item => item.id === productId);
+    };
+
+    const isWishlisted = (productId) => {
+        return wishlist.includes(productId);
     };
 
     // Calculate total pages
-    const totalPages = Math.ceil(products[activeTab].length / productsPerPage);
+    const totalPages = Math.ceil(products[activeTab]?.length / productsPerPage) || 0;
 
     // Get current page products
     const getCurrentPageProducts = () => {
+        if (!products[activeTab]) return [];
         const start = currentPage * productsPerPage;
         const end = start + productsPerPage;
         return products[activeTab].slice(start, end);
     };
+
+
 
     // Change page
     const nextPage = () => {
@@ -210,6 +136,19 @@ const ProductShowcase = () => {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 }
     };
+
+    if (loading) {
+        return (
+            <section className={`py-16 ${theme === 'dark' ? 'bg-dark-bg' : 'bg-white'}`}>
+                <div className="container mx-auto px-4">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className={`mt-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Loading products...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className={`py-16 ${theme === 'dark' ? 'bg-dark-bg' : 'bg-white'}`}>
@@ -264,25 +203,24 @@ const ProductShowcase = () => {
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
                     >
                         {getCurrentPageProducts().map((product) => (
-                            <Link key={product.id} to={`/products/${product.id}`}>
-                                <motion.div
-                                    variants={itemVariants}
-                                    whileHover={{ y: -10, transition: { type: 'spring', stiffness: 300 } }}
-                                    className={`group relative rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-dark-card border border-dark-border' : 'bg-white border border-gray-100 shadow-md'
-                                        }`}
-                                >
+                            <motion.div
+                                key={product.id}
+                                variants={itemVariants}
+                                whileHover={{ y: -10, transition: { type: 'spring', stiffness: 300 } }}
+                                className={`group relative rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-dark-card border border-dark-border' : 'bg-white border border-gray-100 shadow-md'}`}
+                            >
                                 {/* Sale Badge */}
-                                {product.salePrice && (
+                                {product.discountPercentage > 0 && (
                                     <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                                        Sale
+                                        {Math.round(product.discountPercentage)}% OFF
                                     </div>
                                 )}
 
                                 {/* Product Image */}
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={product.image}
-                                        alt={product.name}
+                                        src={product.images[0]}
+                                        alt={product.title}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
 
@@ -298,28 +236,33 @@ const ProductShowcase = () => {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
+                                                addToCart(product);
                                             }}
+                                            disabled={isInCart(product.id)}
                                         >
-                                            <FiShoppingCart className="w-5 h-5" />
+                                            <FiShoppingCart className={`w-5 h-5 ${isInCart(product.id) ? 'text-gray-400' : ''}`} />
                                         </motion.button>
+                                        <Link to={`/products/${product.id}`}>
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             className="p-2 bg-white rounded-full text-gray-800 hover:text-primary"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}
                                         >
                                             <FiEye className="w-5 h-5" />
                                         </motion.button>
+                                        </Link>
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
-                                            className="p-2 bg-white rounded-full text-gray-800 hover:text-red-500"
+                                            className={`p-2 bg-white rounded-full ${isWishlisted(product.id) ? 'text-red-500' : 'text-gray-800 hover:text-red-500'}`}
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
+                                                toggleWishlist(product.id);
                                             }}
                                         >
                                             <FiHeart className="w-5 h-5" />
@@ -332,18 +275,23 @@ const ProductShowcase = () => {
                                     <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                                         {product.category}
                                     </div>
-                                    <h3 className={`font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                        {product.name}
+                                    <Link to={`/products/${product.id}`}>
+                                        <h3 className={`font-semibold mb-2 line-clamp-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                            {product.title}
                                     </h3>
+                                    </Link>
 
                                     {/* Rating */}
                                     <div className="flex items-center mb-2">
                                         <div className="flex text-yellow-400">
                                             {[...Array(5)].map((_, i) => (
-                                                <FiStar
+                                                <svg
                                                     key={i}
                                                     className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`}
-                                                />
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
                                             ))}
                                         </div>
                                         <span className={`ml-1 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -352,21 +300,29 @@ const ProductShowcase = () => {
                                     </div>
 
                                     {/* Price */}
+                                    <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        {product.salePrice ? (
-                                            <>
-                                                <span className="text-lg font-bold text-primary">${product.salePrice.toFixed(2)}</span>
-                                                <span className="ml-2 text-sm line-through text-gray-500">${product.price.toFixed(2)}</span>
-                                            </>
-                                        ) : (
-                                            <span className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                ${product.price.toFixed(2)}
+                                            <span className="text-lg font-bold text-primary">${product.price}</span>
+                                            {product.discountPercentage > 0 && (
+                                                <span className="ml-2 text-sm line-through text-gray-500">
+                                                    ${(product.price / (1 - product.discountPercentage / 100)).toFixed(2)}
                                             </span>
                                         )}
+                                        </div>
+                                        <button
+                                            onClick={() => addToCart(product)}
+                                            disabled={isInCart(product.id)}
+                                            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+                                                isInCart(product.id)
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-primary text-white hover:bg-primary-dark'
+                                            }`}
+                                        >
+                                            {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                                        </button>
                                     </div>
                                 </div>
                             </motion.div>
-                            </Link>
                         ))}
                     </motion.div>
                 </AnimatePresence>
@@ -409,13 +365,13 @@ const ProductShowcase = () => {
                 {/* View All Button */}
                 <div className="text-center mt-10">
                     <Link to="/products">
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-md transition-colors duration-300"
-                        >
-                            View All Products
-                        </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-md transition-colors duration-300"
+                    >
+                        View All Products
+                    </motion.button>
                     </Link>
                 </div>
             </div>

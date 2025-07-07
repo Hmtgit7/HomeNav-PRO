@@ -1,143 +1,208 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiHeart, FiShoppingCart, FiStar, FiTruck, FiShield, FiRefreshCw, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiHeart, FiShoppingCart, FiStar, FiTruck, FiShield, FiRefreshCw, FiChevronLeft, FiChevronRight, FiCheck, FiPackage, FiTag, FiBox, FiCalendar, FiUser, FiMail } from 'react-icons/fi';
 import { useTheme } from '../../../context/ThemeContext';
+import { useNotification } from '../../../context/NotificationContext';
 
-// Mock product data
-const mockProduct = {
-  id: 1,
-  name: "Premium Wireless Bluetooth Headphones",
-  price: 89.99,
-  originalPrice: 129.99,
-  rating: 4.8,
-  reviews: 256,
-  description: "Experience crystal-clear sound with our premium wireless headphones. Featuring advanced noise cancellation technology, these headphones deliver immersive audio quality for music, calls, and gaming. With up to 30 hours of battery life and quick charging capability, you can enjoy your favorite content all day long.",
-  features: [
-    "Active Noise Cancellation",
-    "30-hour battery life",
-    "Quick charging (10 min = 5 hours)",
-    "Bluetooth 5.0",
-    "Built-in microphone",
-    "Foldable design",
-    "Compatible with all devices"
-  ],
-  images: [
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=600&h=600&fit=crop"
-  ],
-  colors: [
-    { name: "Black", hex: "#000000", available: true },
-    { name: "White", hex: "#FFFFFF", available: true },
-    { name: "Blue", hex: "#3B82F6", available: true },
-    { name: "Red", hex: "#EF4444", available: false }
-  ],
-  sizes: [
-    { name: "One Size", available: true }
-  ],
-  stock: 15,
-  category: "Electronics",
-  tags: ["Wireless", "Bluetooth", "Noise Cancelling", "Premium"]
-};
+const API_URL = 'https://dummyjson.com/products';
 
 const ProductDetail = () => {
   const { theme } = useTheme();
+  const { showCartNotification, showWishlistNotification } = useNotification();
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(mockProduct.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(mockProduct.sizes[0]);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart') || '[]'));
+  const [added, setAdded] = useState(false);
+  const [wish, setWish] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
-  
-  // Get productId from URL params
-  const productId = window.location.pathname.split('/').pop();
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_URL}/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        setProduct(data);
+        setLoading(false);
+        setWish(wishlist.includes(Number(id)));
+      });
+  }, [id]);
+
+  useEffect(() => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
 
   const handleAddToCart = () => {
-    // Add to cart logic here
-    console.log('Added to cart:', {
-      product: mockProduct,
-      color: selectedColor,
-      size: selectedSize,
-      quantity
+    setCart(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) {
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + quantity } : item);
+      }
+      return [...prev, { ...product, qty: quantity }];
     });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
+    showCartNotification(product.title);
+  };
+  
+  const handleWishlist = () => {
+    const isCurrentlyWishlisted = wishlist.includes(product.id);
+    setWishlist(prev => prev.includes(product.id) ? prev.filter(w => w !== product.id) : [...prev, product.id]);
+    setWish(w => !w);
+    showWishlistNotification(product.title, !isCurrentlyWishlisted);
   };
 
-  const reviews = [
-    {
-      id: 1,
-      user: "Sarah M.",
-      rating: 5,
-      date: "2024-01-15",
-      comment: "Amazing sound quality! The noise cancellation is incredible and the battery life is exactly as advertised. Highly recommend!"
-    },
-    {
-      id: 2,
-      user: "Mike R.",
-      rating: 4,
-      date: "2024-01-10",
-      comment: "Great headphones overall. The sound is crisp and clear. Only giving 4 stars because the ear cushions could be a bit softer."
-    },
-    {
-      id: 3,
-      user: "Jennifer L.",
-      rating: 5,
-      date: "2024-01-08",
-      comment: "Perfect for my daily commute. The wireless connection is stable and the build quality is excellent. Worth every penny!"
-    }
-  ];
+  if (loading || !product) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className={`mt-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const renderReviews = () => (
+    <div className="space-y-4">
+      {product.reviews && product.reviews.length > 0 ? (
+        product.reviews.map((review, index) => (
+          <div key={index} className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-dark-border' : 'bg-gray-50'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <div className="flex text-yellow-400">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : ''}`} />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">({review.rating}/5)</span>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {new Date(review.date).toLocaleDateString()}
+              </span>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 mb-2">{review.comment}</p>
+            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <FiUser className="h-3 w-3" />
+              <span>{review.reviewerName}</span>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No reviews yet</p>
+      )}
+    </div>
+  );
+
+  const renderSpecifications = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-dark-border' : 'bg-gray-50'}`}>
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Product Details</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Brand:</span>
+              <span className="text-gray-900 dark:text-white">{product.brand}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">SKU:</span>
+              <span className="text-gray-900 dark:text-white">{product.sku}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Weight:</span>
+              <span className="text-gray-900 dark:text-white">{product.weight}g</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Stock:</span>
+              <span className={`font-medium ${product.stock > 10 ? 'text-green-600' : 'text-red-600'}`}>
+                {product.stock} units
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Min Order:</span>
+              <span className="text-gray-900 dark:text-white">{product.minimumOrderQuantity} units</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-dark-border' : 'bg-gray-50'}`}>
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Dimensions</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Width:</span>
+              <span className="text-gray-900 dark:text-white">{product.dimensions?.width}cm</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Height:</span>
+              <span className="text-gray-900 dark:text-white">{product.dimensions?.height}cm</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Depth:</span>
+              <span className="text-gray-900 dark:text-white">{product.dimensions?.depth}cm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {product.tags && product.tags.length > 0 && (
+        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-dark-border' : 'bg-gray-50'}`}>
+          <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Tags</h4>
+          <div className="flex flex-wrap gap-2">
+            {product.tags.map((tag, index) => (
+              <span key={index} className="px-3 py-1 bg-primary text-white text-xs rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.5 }} 
           className="bg-white dark:bg-dark-card rounded-lg shadow-sm border border-gray-200 dark:border-dark-border overflow-hidden"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
             {/* Product Images */}
             <div className="space-y-4">
               <div className="relative">
-                <img
-                  src={mockProduct.images[selectedImage]}
-                  alt={mockProduct.name}
-                  className="w-full h-96 object-cover rounded-lg"
-                />
-                
+                <img src={product.images[selectedImage]} alt={product.title} className="w-full h-96 object-cover rounded-lg" />
                 {/* Navigation arrows */}
-                <button
-                  onClick={() => setSelectedImage(prev => prev > 0 ? prev - 1 : mockProduct.images.length - 1)}
+                <button 
+                  onClick={() => setSelectedImage(prev => prev > 0 ? prev - 1 : product.images.length - 1)} 
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors duration-200"
                 >
                   <FiChevronLeft className="h-5 w-5" />
                 </button>
-                <button
-                  onClick={() => setSelectedImage(prev => prev < mockProduct.images.length - 1 ? prev + 1 : 0)}
+                <button 
+                  onClick={() => setSelectedImage(prev => prev < product.images.length - 1 ? prev + 1 : 0)} 
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors duration-200"
                 >
                   <FiChevronRight className="h-5 w-5" />
                 </button>
               </div>
-              
               {/* Thumbnail images */}
               <div className="flex space-x-2">
-                {mockProduct.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors duration-200 ${
-                      selectedImage === index 
-                        ? 'border-primary' 
-                        : 'border-gray-200 dark:border-dark-border'
-                    }`}
+                {product.images.map((image, index) => (
+                  <button 
+                    key={index} 
+                    onClick={() => setSelectedImage(index)} 
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors duration-200 ${selectedImage === index ? 'border-primary' : 'border-gray-200 dark:border-dark-border'}`}
                   >
-                    <img
-                      src={image}
-                      alt={`${mockProduct.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={image} alt={`${product.title} ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -145,135 +210,69 @@ const ProductDetail = () => {
 
             {/* Product Info */}
             <div className="space-y-6">
-              {/* Header */}
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {mockProduct.category}
-                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{product.category}</span>
                   <span className="text-gray-300">•</span>
                   <div className="flex items-center">
                     <FiStar className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">
-                      {mockProduct.rating} ({mockProduct.reviews} reviews)
-                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 ml-1">{product.rating}</span>
                   </div>
                 </div>
-                
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {mockProduct.name}
-                </h1>
-                
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{product.title}</h1>
                 <div className="flex items-center space-x-3">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    ${mockProduct.price}
-                  </span>
-                  <span className="text-lg text-gray-500 line-through">
-                    ${mockProduct.originalPrice}
-                  </span>
-                  <span className="bg-red-100 text-red-800 text-sm px-2 py-1 rounded-full">
-                    Save ${(mockProduct.originalPrice - mockProduct.price).toFixed(2)}
-                  </span>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">${product.price}</span>
+                  {product.discountPercentage > 0 && (
+                    <span className="text-lg text-gray-500 line-through">
+                      ${(product.price / (1 - product.discountPercentage / 100)).toFixed(2)}
+                    </span>
+                  )}
+                  {product.discountPercentage > 0 && (
+                    <span className="bg-red-100 text-red-800 text-sm px-2 py-1 rounded-full">
+                      Save {Math.round(product.discountPercentage)}%
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Description */}
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                {mockProduct.description}
-              </p>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{product.description}</p>
 
-              {/* Color Selection */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Color: {selectedColor.name}
-                </h3>
-                <div className="flex space-x-2">
-                  {mockProduct.colors.map((color) => (
+              {/* Quantity and Actions */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quantity:</label>
+                  <div className="flex items-center border border-gray-300 dark:border-dark-border rounded-md">
                     <button
-                      key={color.name}
-                      onClick={() => setSelectedColor(color)}
-                      disabled={!color.available}
-                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                        selectedColor.name === color.name
-                          ? 'border-gray-900 dark:border-white scale-110'
-                          : 'border-gray-300 dark:border-gray-600'
-                      } ${!color.available ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Size Selection */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Size: {selectedSize.name}
-                </h3>
-                <div className="flex space-x-2">
-                  {mockProduct.sizes.map((size) => (
-                    <button
-                      key={size.name}
-                      onClick={() => setSelectedSize(size)}
-                      disabled={!size.available}
-                      className={`px-4 py-2 rounded-md border transition-colors duration-200 ${
-                        selectedSize.name === size.name
-                          ? 'border-primary bg-primary text-white'
-                          : 'border-gray-300 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:border-primary'
-                      } ${!size.available ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200"
                     >
-                      {size.name}
+                      <FiChevronLeft className="h-4 w-4" />
                     </button>
-                  ))}
+                    <span className="px-4 py-2 text-gray-900 dark:text-white font-medium">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(prev => prev + 1)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-200"
+                    >
+                      <FiChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Quantity */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Quantity
-                </h3>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                    className="p-2 rounded-md border border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border"
+                <div className="flex space-x-4">
+                  <button 
+                    onClick={handleAddToCart} 
+                    className="flex-1 btn btn-primary"
                   >
-                    -
+                    {added ? <FiCheck className="h-5 w-5 mr-2" /> : <FiShoppingCart className="h-5 w-5 mr-2" />} 
+                    {added ? 'Added' : 'Add to Cart'}
                   </button>
-                  <span className="w-16 text-center font-medium text-gray-900 dark:text-white">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity(prev => prev + 1)}
-                    className="p-2 rounded-md border border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-border"
+                  <button 
+                    onClick={handleWishlist} 
+                    className={`p-4 rounded-md border transition-colors duration-200 ${wish ? 'border-red-500 text-red-500' : 'border-gray-300 dark:border-dark-border text-gray-600 dark:text-gray-300 hover:border-red-500 hover:text-red-500'}`}
                   >
-                    +
+                    <FiHeart className="h-5 w-5" />
                   </button>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {mockProduct.stock} in stock
-                  </span>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 btn btn-primary"
-                >
-                  <FiShoppingCart className="h-5 w-5 mr-2" />
-                  Add to Cart
-                </button>
-                <button
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                  className={`p-4 rounded-md border transition-colors duration-200 ${
-                    isWishlisted
-                      ? 'border-red-500 text-red-500'
-                      : 'border-gray-300 dark:border-dark-border text-gray-600 dark:text-gray-300 hover:border-red-500 hover:text-red-500'
-                  }`}
-                >
-                  <FiHeart className="h-5 w-5" />
-                </button>
               </div>
 
               {/* Features */}
@@ -282,22 +281,32 @@ const ProductDetail = () => {
                   <FiTruck className="h-5 w-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">Free Shipping</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">On orders over $50</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{product.shippingInformation}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <FiShield className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">2 Year Warranty</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Full coverage</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Warranty</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{product.warrantyInformation}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <FiRefreshCw className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">30 Day Returns</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">No questions asked</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Return Policy</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{product.returnPolicy}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Availability Status */}
+              <div className={`p-3 rounded-lg ${product.availabilityStatus === 'In Stock' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${product.availabilityStatus === 'In Stock' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className={`text-sm font-medium ${product.availabilityStatus === 'In Stock' ? 'text-green-800 dark:text-green-400' : 'text-red-800 dark:text-red-400'}`}>
+                    {product.availabilityStatus}
+                  </span>
                 </div>
               </div>
             </div>
@@ -307,96 +316,45 @@ const ProductDetail = () => {
           <div className="border-t border-gray-200 dark:border-dark-border">
             <div className="flex border-b border-gray-200 dark:border-dark-border">
               {[
-                { id: 'description', label: 'Description' },
-                { id: 'features', label: 'Features' },
-                { id: 'reviews', label: 'Reviews' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
+                { id: 'description', label: 'Description', icon: <FiPackage className="h-4 w-4" /> },
+                { id: 'specifications', label: 'Specifications', icon: <FiBox className="h-4 w-4" /> },
+                { id: 'reviews', label: 'Reviews', icon: <FiStar className="h-4 w-4" /> }
+              ].map(tab => (
+                <button 
+                  key={tab.id} 
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 text-sm font-medium transition-colors duration-200 ${
-                    activeTab === tab.id
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                  className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-colors duration-200 border-b-2 ${activeTab === tab.id ? 'border-primary text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border-transparent'}`}
                 >
-                  {tab.label}
+                  {tab.icon}
+                  <span>{tab.label}</span>
                 </button>
               ))}
             </div>
-
             <div className="p-8">
               <AnimatePresence mode="wait">
-                {activeTab === 'description' && (
-                  <motion.div
-                    key="description"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {mockProduct.description}
-                    </p>
-                  </motion.div>
-                )}
-
-                {activeTab === 'features' && (
-                  <motion.div
-                    key="features"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ul className="space-y-2">
-                      {mockProduct.features.map((feature, index) => (
-                        <li key={index} className="flex items-center space-x-3">
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          <span className="text-gray-600 dark:text-gray-300">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <motion.div
-                    key="reviews"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="space-y-6">
-                      {reviews.map((review) => (
-                        <div key={review.id} className="border-b border-gray-200 dark:border-dark-border pb-6 last:border-b-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium text-gray-900 dark:text-white">
-                              {review.user}
-                            </h4>
-                            <div className="flex items-center space-x-1">
-                              {[...Array(5)].map((_, i) => (
-                                <FiStar
-                                  key={i}
-                                  className={`h-4 w-4 ${i < review.rating 
-                                    ? 'text-yellow-400 fill-current' 
-                                    : 'text-gray-300'}`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            {new Date(review.date).toLocaleDateString()}
-                          </p>
-                          <p className="text-gray-600 dark:text-gray-300">
-                            {review.comment}
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {activeTab === 'description' && (
+                    <div className="space-y-4">
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{product.description}</p>
+                      {product.brand && (
+                        <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-dark-border' : 'bg-gray-50'}`}>
+                          <h4 className="font-semibold text-gray-900 dark:text-white mb-2">About {product.brand}</h4>
+                          <p className="text-gray-600 dark:text-gray-300 text-sm">
+                            This product is manufactured by {product.brand}, a trusted brand known for quality and reliability.
                           </p>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </motion.div>
-                )}
+                  )}
+                  {activeTab === 'specifications' && renderSpecifications()}
+                  {activeTab === 'reviews' && renderReviews()}
+                </motion.div>
               </AnimatePresence>
             </div>
           </div>

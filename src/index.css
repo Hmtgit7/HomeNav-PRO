@@ -56,6 +56,13 @@
   .section-subtitle {
     @apply text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10;
   }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* Custom animations */
