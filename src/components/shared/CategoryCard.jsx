@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 
 /**
@@ -33,18 +34,19 @@ const CategoryCard = ({ category }) => {
       </div>
       <div className={`p-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
         <p className="mb-4 text-sm">{category.description}</p>
-        <motion.a
-          href={category.link}
-          whileHover={{ x: 5 }}
-          className={`inline-flex items-center font-medium ${
-            theme === 'dark' ? 'text-primary-light' : 'text-primary'
-          }`}
-        >
-          Shop now
-          <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-          </svg>
-        </motion.a>
+        <Link to={category.link}>
+          <motion.div
+            whileHover={{ x: 5 }}
+            className={`inline-flex items-center font-medium ${
+              theme === 'dark' ? 'text-primary-light' : 'text-primary'
+            }`}
+          >
+            Shop now
+            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </motion.div>
+        </Link>
       </div>
     </motion.div>
   );

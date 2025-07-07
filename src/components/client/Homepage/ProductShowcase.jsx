@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FiHeart, FiShoppingCart, FiEye, FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -263,13 +264,13 @@ const ProductShowcase = () => {
                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
                     >
                         {getCurrentPageProducts().map((product) => (
-                            <motion.div
-                                key={product.id}
-                                variants={itemVariants}
-                                whileHover={{ y: -10, transition: { type: 'spring', stiffness: 300 } }}
-                                className={`group relative rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-dark-card border border-dark-border' : 'bg-white border border-gray-100 shadow-md'
-                                    }`}
-                            >
+                            <Link key={product.id} to={`/products/${product.id}`}>
+                                <motion.div
+                                    variants={itemVariants}
+                                    whileHover={{ y: -10, transition: { type: 'spring', stiffness: 300 } }}
+                                    className={`group relative rounded-lg overflow-hidden ${theme === 'dark' ? 'bg-dark-card border border-dark-border' : 'bg-white border border-gray-100 shadow-md'
+                                        }`}
+                                >
                                 {/* Sale Badge */}
                                 {product.salePrice && (
                                     <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
@@ -286,11 +287,18 @@ const ProductShowcase = () => {
                                     />
 
                                     {/* Quick action buttons */}
-                                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <div 
+                                        className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             className="p-2 bg-white rounded-full text-gray-800 hover:text-primary"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
                                         >
                                             <FiShoppingCart className="w-5 h-5" />
                                         </motion.button>
@@ -298,6 +306,10 @@ const ProductShowcase = () => {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             className="p-2 bg-white rounded-full text-gray-800 hover:text-primary"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
                                         >
                                             <FiEye className="w-5 h-5" />
                                         </motion.button>
@@ -305,6 +317,10 @@ const ProductShowcase = () => {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             className="p-2 bg-white rounded-full text-gray-800 hover:text-red-500"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
                                         >
                                             <FiHeart className="w-5 h-5" />
                                         </motion.button>
@@ -350,6 +366,7 @@ const ProductShowcase = () => {
                                     </div>
                                 </div>
                             </motion.div>
+                            </Link>
                         ))}
                     </motion.div>
                 </AnimatePresence>
@@ -391,13 +408,15 @@ const ProductShowcase = () => {
 
                 {/* View All Button */}
                 <div className="text-center mt-10">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-md transition-colors duration-300"
-                    >
-                        View All Products
-                    </motion.button>
+                    <Link to="/products">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-md transition-colors duration-300"
+                        >
+                            View All Products
+                        </motion.button>
+                    </Link>
                 </div>
             </div>
         </section>

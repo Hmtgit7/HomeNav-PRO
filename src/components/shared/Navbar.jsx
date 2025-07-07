@@ -170,17 +170,19 @@ const Navbar = () => {
               </Link>
             )}
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <FiShoppingCart className="h-5 w-5" />
-              {cartItems > 0 && (
-                <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                  {cartItems}
-                </span>
-              )}
-            </motion.button>
+            <Link to="/cart">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <FiShoppingCart className="h-5 w-5" />
+                {cartItems > 0 && (
+                  <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {cartItems}
+                  </span>
+                )}
+              </motion.button>
+            </Link>
           </div>
 
           {/* Desktop navigation */}
@@ -213,19 +215,22 @@ const Navbar = () => {
                           <div className="rounded-lg overflow-hidden">
                             <div className="relative grid gap-6 px-5 py-6 sm:gap-8 sm:p-8">
                               {item.submenu.map((subItem, subIndex) => (
-                                <motion.a
+                                <Link
                                   key={subIndex}
-                                  href={subItem.path}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: subIndex * 0.1 }}
-                                  className={`-m-3 p-3 flex items-start rounded-lg hover:bg-opacity-50 transition ease-in-out duration-150 ${theme === 'dark' ? 'hover:bg-dark-border text-gray-200' : 'hover:bg-gray-50 text-gray-800'
-                                    }`}
+                                  to={subItem.path}
                                 >
-                                  <div className="ml-4">
-                                    <p className="text-base font-medium">{subItem.name}</p>
-                                  </div>
-                                </motion.a>
+                                  <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: subIndex * 0.1 }}
+                                    className={`-m-3 p-3 flex items-start rounded-lg hover:bg-opacity-50 transition ease-in-out duration-150 ${theme === 'dark' ? 'hover:bg-dark-border text-gray-200' : 'hover:bg-gray-50 text-gray-800'
+                                      }`}
+                                  >
+                                    <div className="ml-4">
+                                      <p className="text-base font-medium">{subItem.name}</p>
+                                    </div>
+                                  </motion.div>
+                                </Link>
                               ))}
                             </div>
                           </div>
@@ -234,14 +239,15 @@ const Navbar = () => {
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <motion.a
-                    href={item.path}
-                    variants={menuItemVariants}
-                    className={`text-base font-medium hover:text-primary transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
-                      }`}
-                  >
-                    {item.title}
-                  </motion.a>
+                  <Link to={item.path}>
+                    <motion.div
+                      variants={menuItemVariants}
+                      className={`text-base font-medium hover:text-primary transition-colors duration-200 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                        }`}
+                    >
+                      {item.title}
+                    </motion.div>
+                  </Link>
                 )}
               </div>
             ))}
@@ -399,17 +405,19 @@ const Navbar = () => {
               </div>
             )}
 
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <FiShoppingCart className="h-5 w-5" />
-              {cartItems > 0 && (
-                <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                  {cartItems}
-                </span>
-              )}
-            </motion.button>
+            <Link to="/cart">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className={`p-2 rounded-full flex items-center ${theme === 'dark' ? 'text-gray-200 hover:bg-dark-border' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <FiShoppingCart className="h-5 w-5" />
+                {cartItems > 0 && (
+                  <span className="ml-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {cartItems}
+                  </span>
+                )}
+              </motion.button>
+            </Link>
           </div>
         </div>
       </div>
@@ -449,30 +457,33 @@ const Navbar = () => {
                             className="pl-4 space-y-2 mt-2"
                           >
                             {item.submenu.map((subItem, subIndex) => (
-                              <motion.a
+                              <Link
                                 key={subIndex}
-                                href={subItem.path}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: subIndex * 0.1 }}
-                                className={`block py-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                                  }`}
+                                to={subItem.path}
                               >
-                                {subItem.name}
-                              </motion.a>
+                                <motion.div
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: subIndex * 0.1 }}
+                                  className={`block py-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                                    }`}
+                                >
+                                  {subItem.name}
+                                </motion.div>
+                              </Link>
                             ))}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
                   ) : (
-                    <a
-                      href={item.path}
+                    <Link
+                      to={item.path}
                       className={`block py-2 text-base font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
                         }`}
                     >
                       {item.title}
-                    </a>
+                    </Link>
                   )}
                 </div>
               ))}

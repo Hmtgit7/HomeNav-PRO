@@ -9,6 +9,13 @@ import LoginForm from './components/client/Auth/LoginForm';
 import RegisterForm from './components/client/Auth/RegisterForm';
 import ForgotPasswordForm from './components/client/Auth/ForgotPasswordForm';
 import AccountPage from './components/client/Profile/AccountPage';
+import ProductList from './components/client/Products/ProductList';
+import ProductDetail from './components/client/Products/ProductDetail';
+import CategoryPage from './components/client/Categories/CategoryPage';
+import AboutPage from './components/client/About/AboutPage';
+import ContactPage from './components/client/Contact/ContactPage';
+import CartPage from './components/client/Cart/CartPage';
+import NotFoundPage from './components/client/NotFound/NotFoundPage';
 import ScrollToTop from './components/shared/ScrollToTop';
 import Loader from './components/shared/Loader';
 
@@ -61,6 +68,12 @@ function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/categories/:categoryId" element={<CategoryPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/cart" element={<CartPage />} />
 
                 {/* Auth routes (accessible only when not logged in) */}
                 <Route element={<PublicRoute />}>
@@ -75,7 +88,7 @@ function App() {
                 </Route>
 
                 {/* Fallback route */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
             <Footer />

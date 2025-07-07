@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -83,14 +84,15 @@ const Carousel = ({ slides, autoPlay = true, interval = 5000 }) => {
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{slides[currentSlide].title}</h2>
                 <p className="text-xl text-gray-200 mb-6">{slides[currentSlide].subtitle}</p>
                 {slides[currentSlide].ctaText && (
-                  <motion.a
-                    href={slides[currentSlide].ctaLink || '#'}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-block bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-md transition-colors duration-300"
-                  >
-                    {slides[currentSlide].ctaText}
-                  </motion.a>
+                  <Link to={slides[currentSlide].ctaLink || '#'}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="inline-block bg-primary hover:bg-primary-dark text-white font-semibold px-6 py-3 rounded-md transition-colors duration-300"
+                    >
+                      {slides[currentSlide].ctaText}
+                    </motion.div>
+                  </Link>
                 )}
               </motion.div>
             </div>
